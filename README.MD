@@ -6,10 +6,10 @@
 使用jar方式运行为佳：nohup java -jar uploadfile-0.0.1-SNAPSHOT.jar &
 
 再使用Nginx反代：
-location /upload {
+location /upload {  
                 proxy_pass http://127.0.0.1:8888;
                 proxy_set_header Host $host:$server_port;
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
+         }
 
