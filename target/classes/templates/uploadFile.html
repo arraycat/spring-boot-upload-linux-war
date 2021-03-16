@@ -7,10 +7,13 @@
 <!-- 默认访问 src/main/resources/static下的css文件夹-->
 <link rel="stylesheet" th:href="@{css/bootstrap-theme.min.css}" />
 
-<!-- 以下用于开发时本地预览 -->
+<!--/*--> 
+  <!-- 以下用于开发时本地预览 -->
+<!--*/-->
+<!--/*-->
 <link rel="stylesheet" href="../static/css/bootstrap.min.css" />
 <link rel="stylesheet" href="../static/css/bootstrap-theme.min.css" />
-
+<!--*/-->
 </head>
 <body>
 <div class="panel panel-primary">
@@ -19,9 +22,9 @@
 		</div>
 	</div>
 	<div class="container">
-		<div th:if="${message}">
-				<h5 th:text="${message}">上传成功</h5>
-			</div>
+		<div th:each=" message : ${messages} ">
+			<h5 th:text="${message}">上传成功</h5>
+		</div>
 		<div class="row">
 			<div class="col-md-6 col-sm-6">
 				<form class="form-horizontal" th:action="@{/upload}" method="POST" enctype="multipart/form-data">
@@ -30,7 +33,7 @@
 							<span class="input-group-addon">
 								<i class="glyphicon glyphicon-search"></i>
 							</span>
-							<input class="form-control" type="file" name="file" value="请选择文件" />
+							<input class="form-control" type="file" name="files" multiple="multiple" value="请选择文件" />
 						</div>
 					</div>
 					<div class="form-group">

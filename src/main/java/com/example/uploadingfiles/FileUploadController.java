@@ -1,6 +1,8 @@
 package com.example.uploadingfiles;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,49 +27,52 @@ import com.example.uploadingfiles.storage.StorageService;
 @Controller
 public class FileUploadController {
 
-	private final StorageService storageService;
+    private final StorageService storageService;
 
-	@Autowired
-	public FileUploadController(StorageService storageService) {
-		this.storageService = storageService;
-	}
+    @Autowired
+    public FileUploadController(StorageService storageService) {
+        this.storageService = storageService;
+    }
 
-	@GetMapping("/")
-	public String listUploadedFiles(Model model) throws IOException {
-		//每次初始化，防止tmp下的目录被清理
-		storageService.init();
-		
-		model.addAttribute("files", storageService.loadAll().map(
-				path -> MvcUriComponentsBuilder.fromMethodName(FileUploadController.class,
-						"serveFile", path.getFileName().toString()).build().toUri().toString())
-				.collect(Collectors.toList()));
+    @GetMapping("/")
+    public String listUploadedFiles(Model model) throws IOException {
+        // 每次初始化，防止tmp下的目录被清理
+        storageService.init();
 
-		return "uploadFile";
-	}
+        model.addAttribute("files",
+                storageService.loadAll()
+                        .map(path -> MvcUriComponentsBuilder
+                                .fromMethodName(FileUploadController.class, "serveFile", path.getFileName().toString())
+                                .build().toUri().toString())
+                        .collect(Collectors.toList()));
 
-	@GetMapping("/files/{filename:.+}")
-	@ResponseBody
-	public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
+        return "uploadFile";
+    }
 
-		Resource file = storageService.loadAsResource(filename);
-		return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
-				"attachment; filename=\"" + file.getFilename() + "\"").body(file);
-	}
+    @GetMapping("/files/{filename:.+}")
+    @ResponseBody
+    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
 
-	@PostMapping("/upload")
-	public String handleFileUpload(@RequestParam("file") MultipartFile file,
-			RedirectAttributes redirectAttributes) {
+        Resource file = storageService.loadAsResource(filename);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
+                .body(file);
+    }
 
-		storageService.store(file);
-		redirectAttributes.addFlashAttribute("message",
-				"You successfully uploaded " + file.getOriginalFilename() + "!");
+    @PostMapping("/upload")
+    public String handleFileUpload(@RequestParam("files") MultipartFile[] files, RedirectAttributes redirectAttributes) {
+        List<String> messages = new ArrayList<String>();
+        for (MultipartFile file : files) {
+            storageService.store(file);
+            messages.add("You successfully uploaded: " + file.getOriginalFilename() + "!");
+        }
+        redirectAttributes.addFlashAttribute("messages", messages);
+        return "redirect:/";
+    }
 
-		return "redirect:/";
-	}
-
-	@ExceptionHandler(StorageFileNotFoundException.class)
-	public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {
-		return ResponseEntity.notFound().build();
-	}
+    @ExceptionHandler(StorageFileNotFoundException.class)
+    public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {
+        return ResponseEntity.notFound().build();
+    }
 
 }
